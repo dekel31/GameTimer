@@ -1,0 +1,99 @@
+<html>
+<title>
+    params are: playerNames (separated by ,), numOfSeconds, timeToAdd
+</title>
+<script>
+    let running = false
+    let timeToAdd = 0
+    let numOfPlayers
+    let currentPlayer = 0
+    const updateTime = 1000;
+​
+    let playerStyles = [
+        "left: 10%; top: 10%",
+        "right: 10%; top: 10%",
+        "left: 10%; bottom: 10%",
+        "right: 10%; bottom: 10%"
+    ]
+​
+    let playerNamesStyles = [
+        "left: 10%; top: 4%",
+        "right: 10%; top: 4%",
+        "left: 10%; bottom: 16%",
+        "right: 10%; bottom: 16%"
+    ]
+​
+    function startGame() {
+        let params = new URLSearchParams(window.location.search)
+        let playerNames = params.get("playerNames").split(",")
+        let numOfSeconds = params.get("numOfSeconds")
+        timeToAdd = params.get("timeToAdd") ? parseInt(params.get("timeToAdd")) : 0
+        numOfPlayers = playerNames.length
+​
+        for (let i = 0; i < numOfPlayers; i++) {
+            let playerElement = document.createElement("p")
+            let playerNameElement = document.createElement("p")
+            playerNameElement.innerText = playerNames[i]
+            playerNameElement.className = "playerStyle"
+            playerNameElement.style.cssText = playerNamesStyles[i]
+            playerElement.className = "playerStyle"
+            playerElement.style.cssText = playerStyles[i]
+            playerElement.id = "player" + i
+            playerElement.innerText = numOfSeconds
+            if (i == 0)
+                playerElement.className += " activePlayer"
+            document.body.appendChild(playerElement)
+            document.body.appendChild(playerNameElement)
+        }
+        setInterval(checkIsRunning, updateTime)
+    }
+​
+    function setRunning(isRunning) {
+        running = isRunning
+        document.getElementById("startButton").innerText = isRunning ? "||" : ">"
+    }
+​
+    function setNextPlayer() {
+        document.getElementById("player" + currentPlayer).className = "playerStyle";
+        if (running) {
+            document.getElementById("player" + currentPlayer).innerText =
+                parseInt(document.getElementById("player" + currentPlayer).innerText) + timeToAdd
+        }
+        currentPlayer++
+        if (currentPlayer >= numOfPlayers)
+            currentPlayer = 0
+        document.getElementById("player" + currentPlayer).className = "playerStyle activePlayer";
+    }
+​
+    function checkIsRunning() {
+        if (running) {
+            document.getElementById("player" + currentPlayer).innerText -= 1;
+        }
+    }
+</script>
+<style>
+    .playerStyle {
+        width: 100px;
+        height: 100px;
+        font-size: 50px;
+        position: absolute;
+        text-align: center;
+        vertical-align: middle;
+    }
+    .activePlayer {
+        color: red;
+        font-weight: bold;
+    }
+    .buttonStyle {
+        font-size: 40px; position: fixed;
+    }
+</style>
+<body onload="startGame()">
+<button id="startButton" class="buttonStyle" onclick="setRunning(!running)" style="right: 30%; top: 40%; bottom: 40%; left: 50%">
+    &gt;
+</button>
+<button id="nextButton" class="buttonStyle" onclick="setNextPlayer()" style="right: 50%; top: 40%; bottom: 40%; left: 30%">
+    >>
+</button>
+</body>
+</html
