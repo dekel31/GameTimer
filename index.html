@@ -5,8 +5,10 @@
 <script>
     let running = false;
     let timeToAdd = 0;
+	let playerNames;
     let numOfPlayers;
     let currentPlayer = 0;
+	let numOfSeconds;
     const updateTime = 1000;
 
     let playerStyles = [
@@ -23,12 +25,32 @@
         "right: 10%; bottom: 16%"
     ]
 
-    function startGame() {
-        let params = new URLSearchParams(window.location.search);
-        let playerNames = params.get("playerNames").split(",");
-        let numOfSeconds = params.get("numOfSeconds");
+	function shuffle(array) {
+	  let currentIndex = array.length;
+	  while (currentIndex != 0) {
+		let randomIndex = Math.floor(Math.random() * currentIndex);
+		currentIndex--;
+		[array[currentIndex], array[randomIndex]] = [
+		  array[randomIndex], array[currentIndex]];
+	  }
+	  return array;
+	}
+	
+	function initParams() {
+		let params = new URLSearchParams(window.location.search);
+        playerNames = shuffle(params.get("playerNames").split(","));
+		console.log("players:" + playerNames);
+		
+        numOfSeconds = params.get("numOfSeconds");
+		console.log("numOfSeconds:" + numOfSeconds);
         timeToAdd = params.get("timeToAdd") ? parseInt(params.get("timeToAdd")) : 0;
+		console.log("timeToAdd:" + timeToAdd);
+		
         numOfPlayers = playerNames.length;
+	}
+
+    function startGame() {
+		initParams();
 
         for (let i = 0; i < numOfPlayers; i++) {
             let playerElement = document.createElement("p");
@@ -40,8 +62,9 @@
             playerElement.style.cssText = playerStyles[i];
             playerElement.id = "player" + i;
             playerElement.innerText = numOfSeconds;
-            if (i == 0)
+            if (i == 0) {
                 playerElement.className += " activePlayer";
+			}
             document.body.appendChild(playerElement);
             document.body.appendChild(playerNameElement);
         }
@@ -51,18 +74,36 @@
     function setRunning(isRunning) {
         running = isRunning;
         document.getElementById("startButton").innerText = isRunning ? "||" : ">";
+		logRunning();
     }
+	
+	function logRunning() {
+		if (running) {
+			console.log("Resumed game at " + humanReadableTime() + ", now it's " + playerNames[currentPlayer] + " player's turn");
+		} else {
+			console.log("Paused game at " + humanReadableTime());
+		}
+	}
+	
+	function humanReadableTime() {
+		let date = new Date();
+		return date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+	}
 
     function setNextPlayer() {
         document.getElementById("player" + currentPlayer).className = "playerStyle";
-        if (running) {
-            document.getElementById("player" + currentPlayer).innerText =
-                parseInt(document.getElementById("player" + currentPlayer).innerText) + timeToAdd;
+        if (running && timeToAdd > 0) {
+			let currentPlayerTime = parseInt(document.getElementById("player" + currentPlayer).innerText);
+            document.getElementById("player" + currentPlayer).innerText = currentPlayerTime + timeToAdd;
+			console.log("player " + playerNames[currentPlayer] + " had " + currentPlayerTime + 
+				" and gained " + timeToAdd + " seconds at " + humanReadableTime());
         }
         currentPlayer++;
-        if (currentPlayer >= numOfPlayers)
+        if (currentPlayer >= numOfPlayers) {
             currentPlayer = 0;
+		}
         document.getElementById("player" + currentPlayer).className = "playerStyle activePlayer";
+		console.log("Next player turn at " + humanReadableTime() + ", current player " + playerNames[currentPlayer])
     }
     
     function checkIsRunning() {
