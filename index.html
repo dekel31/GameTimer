@@ -3,19 +3,19 @@
     params are: playerNames (separated by ,), numOfSeconds, timeToAdd
 </title>
 <script>
-    let running = false
-    let timeToAdd = 0
-    let numOfPlayers
-    let currentPlayer = 0
+    let running = false;
+    let timeToAdd = 0;
+    let numOfPlayers;
+    let currentPlayer = 0;
     const updateTime = 1000;
-​
+
     let playerStyles = [
         "left: 10%; top: 10%",
         "right: 10%; top: 10%",
         "left: 10%; bottom: 10%",
         "right: 10%; bottom: 10%"
     ]
-​
+
     let playerNamesStyles = [
         "left: 10%; top: 4%",
         "right: 10%; top: 4%",
@@ -24,44 +24,44 @@
     ]
 ​
     function startGame() {
-        let params = new URLSearchParams(window.location.search)
-        let playerNames = params.get("playerNames").split(",")
-        let numOfSeconds = params.get("numOfSeconds")
-        timeToAdd = params.get("timeToAdd") ? parseInt(params.get("timeToAdd")) : 0
-        numOfPlayers = playerNames.length
+        let params = new URLSearchParams(window.location.search);
+        let playerNames = params.get("playerNames").split(",");
+        let numOfSeconds = params.get("numOfSeconds");
+        timeToAdd = params.get("timeToAdd") ? parseInt(params.get("timeToAdd")) : 0;
+        numOfPlayers = playerNames.length;
 ​
         for (let i = 0; i < numOfPlayers; i++) {
-            let playerElement = document.createElement("p")
-            let playerNameElement = document.createElement("p")
-            playerNameElement.innerText = playerNames[i]
-            playerNameElement.className = "playerStyle"
-            playerNameElement.style.cssText = playerNamesStyles[i]
-            playerElement.className = "playerStyle"
-            playerElement.style.cssText = playerStyles[i]
-            playerElement.id = "player" + i
-            playerElement.innerText = numOfSeconds
+            let playerElement = document.createElement("p");
+            let playerNameElement = document.createElement("p");
+            playerNameElement.innerText = playerNames[i];
+            playerNameElement.className = "playerStyle";
+            playerNameElement.style.cssText = playerNamesStyles[i];
+            playerElement.className = "playerStyle";
+            playerElement.style.cssText = playerStyles[i];
+            playerElement.id = "player" + i;
+            playerElement.innerText = numOfSeconds;
             if (i == 0)
-                playerElement.className += " activePlayer"
-            document.body.appendChild(playerElement)
-            document.body.appendChild(playerNameElement)
+                playerElement.className += " activePlayer";
+            document.body.appendChild(playerElement);
+            document.body.appendChild(playerNameElement);
         }
-        setInterval(checkIsRunning, updateTime)
+        setInterval(checkIsRunning, updateTime);
     }
 ​
     function setRunning(isRunning) {
-        running = isRunning
-        document.getElementById("startButton").innerText = isRunning ? "||" : ">"
+        running = isRunning;
+        document.getElementById("startButton").innerText = isRunning ? "||" : ">";
     }
 ​
     function setNextPlayer() {
         document.getElementById("player" + currentPlayer).className = "playerStyle";
         if (running) {
             document.getElementById("player" + currentPlayer).innerText =
-                parseInt(document.getElementById("player" + currentPlayer).innerText) + timeToAdd
+                parseInt(document.getElementById("player" + currentPlayer).innerText) + timeToAdd;
         }
-        currentPlayer++
+        currentPlayer++;
         if (currentPlayer >= numOfPlayers)
-            currentPlayer = 0
+            currentPlayer = 0;
         document.getElementById("player" + currentPlayer).className = "playerStyle activePlayer";
     }
 ​
@@ -96,4 +96,4 @@
     >>
 </button>
 </body>
-</html
+</html>
