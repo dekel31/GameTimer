@@ -1,0 +1,253 @@
+<html lang="en">
+<title>
+    params are: player, numOfSeconds, timeToAdd, landscape
+</title>
+<script>
+    let running = false;
+    let timeToAdd = 0;
+    let playerNames;
+    let numOfPlayers;
+    let currentPlayer = 0;
+    let numOfSeconds;
+    let landscape;
+
+    let playerNamesStyles;
+    let playerStyle;
+
+    const updateTime = 1000;
+    let wakeLock = null;
+
+    let playerStyles = [
+        "left: 10%; top: 10%",
+        "right: 10%; top: 10%",
+        "right: 10%; bottom: 10%",
+        "left: 10%; bottom: 10%",
+    ];
+
+    let playerNamesPortraitStyles = [
+        "left: 10%; top: 4%",
+        "right: 10%; top: 4%",
+        "right: 10%; bottom: 16%",
+        "left: 10%; bottom: 16%",
+    ];
+
+    let playerNamesLandscapeStyles = [
+        "left: 16%; top: 10%",
+        "right: 4%; top: 10%",
+        "right: 4%; bottom: 10%",
+        "left: 16%; bottom: 10%",
+    ];
+
+    function shuffle(array) {
+      let currentIndex = array.length;
+      while (currentIndex != 0) {
+        let randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+        [array[currentIndex], array[randomIndex]] = [
+          array[randomIndex], array[currentIndex]];
+      }
+      return array;
+    }
+
+    function initParams() {
+        let params = new URLSearchParams(window.location.search);
+        playerNames = shuffle(params.getAll("player"));
+        console.log("players:" + playerNames);
+
+        numOfSeconds = params.get("numOfSeconds");
+        console.log("numOfSeconds:" + numOfSeconds);
+        timeToAdd = params.get("timeToAdd") ? parseInt(params.get("timeToAdd")) : 0;
+        console.log("timeToAdd:" + timeToAdd);
+
+        landscape = params.get("landscape");
+
+        numOfPlayers = playerNames.length;
+    }
+
+    function setPageOrientation() {
+        playerNamesStyles = landscape ? playerNamesLandscapeStyles : playerNamesPortraitStyles;
+        playerStyle = "playerStyle" + (landscape ? " horizontal" : "");
+        document.getElementById("startButton").className = landscape ? "horizontal" : "";
+        document.getElementById("nextButton").className = landscape ? "horizontal" : "";
+    }
+
+    // Function that attempts to request a wake lock.
+    const requestWakeLock = async () => {
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLock.addEventListener('release', () => {
+          console.log('Wake Lock was released');
+        });
+        console.log('Wake Lock is active');
+      } catch (err) {
+        console.error(`${err.name}, ${err.message}`);
+      }
+    };
+
+    const releaseWakeLock = async () => {
+      if (!wakeLock) {
+        return;
+      }
+      try {
+        await wakeLock.release();
+        wakeLock = null;
+      } catch (err) {
+        console.error(`${err.name}, ${err.message}`);
+      }
+    };
+
+    function startGame() {
+        initParams();
+        setPageOrientation();
+
+        for (let i = 0; i < numOfPlayers; i++) {
+            let playerElement = document.createElement("p");
+            let playerNameElement = document.createElement("p");
+            playerNameElement.innerText = playerNames[i];
+            playerNameElement.className = playerStyle;
+            playerNameElement.style.cssText = playerNamesStyles[i];
+            playerElement.className = playerStyle;
+            playerElement.style.cssText = playerStyles[i];
+            playerElement.id = "player" + i;
+            playerElement.innerText = numOfSeconds;
+            if (i == 0) {
+                playerElement.className += " activePlayer";
+            }
+            document.body.appendChild(playerElement);
+            document.body.appendChild(playerNameElement);
+        }
+        setInterval(checkIsRunning, updateTime);
+    }
+
+    function setRunning(isRunning) {
+        running = isRunning;
+        document.getElementById("startButton").innerText = isRunning ? "||" : ">";
+        if (!running) {
+            releaseWakeLock()
+        } else {
+            requestWakeLock();
+        }
+        logRunning();
+    }
+
+    function logRunning() {
+        if (running) {
+            console.log("Resumed game at " + humanReadableTime() + ", now it's " + playerNames[currentPlayer] + " player's turn");
+        } else {
+            console.log("Paused game at " + humanReadableTime());
+        }
+    }
+
+    function humanReadableTime() {
+        let date = new Date();
+        return date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+    }
+
+    function setNextPlayer() {
+        document.getElementById("player" + currentPlayer).className = document.getElementById("player" + currentPlayer).className.replace("activePlayer", "");
+        if (running && timeToAdd > 0) {
+            let currentPlayerTime = parseInt(document.getElementById("player" + currentPlayer).innerText);
+            document.getElementById("player" + currentPlayer).innerText = currentPlayerTime + timeToAdd;
+            console.log("player " + playerNames[currentPlayer] + " had " + currentPlayerTime +
+                " and gained " + timeToAdd + " seconds at " + humanReadableTime());
+        }
+        currentPlayer++;
+        if (currentPlayer >= numOfPlayers) {
+            currentPlayer = 0;
+        }
+        document.getElementById("player" + currentPlayer).className = playerStyle + " activePlayer";
+        console.log("Next player turn at " + humanReadableTime() + ", current player " + playerNames[currentPlayer])
+    }
+
+    function checkIsRunning() {
+        if (running) {
+            document.getElementById("player" + currentPlayer).innerText -= 1;
+        }
+    }
+</script>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f9f9f9;
+    }
+    .horizontal {
+        transform: rotate(90deg);
+    }
+    .playerStyle {
+        width: 100px;
+        height: 100px;
+        font-size: 50px;
+        position: absolute;
+        text-align: center;
+        vertical-align: middle;
+    }
+    .activePlayer {
+        color: red;
+        font-weight: bold;
+    }
+
+    button {
+      appearance: none;
+      background-color: #2ea44f;
+      border: 1px solid rgba(27, 31, 35, .15);
+      border-radius: 6px;
+      box-shadow: rgba(27, 31, 35, .1) 0 1px 0;
+      box-sizing: border-box;
+      color: #fff;
+      cursor: pointer;
+      display: inline-block;
+      font-family: -apple-system,system-ui,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 20px;
+      padding: 6px 16px;
+      position: relative;
+      text-align: center;
+      text-decoration: none;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    button:focus:not(:focus-visible):not(.focus-visible) {
+      box-shadow: none;
+      outline: none;
+    }
+
+    button:hover {
+      background-color: #2c974b;
+    }
+
+    button:focus {
+      box-shadow: rgba(46, 164, 79, .4) 0 0 0 3px;
+      outline: none;
+    }
+
+    button:disabled {
+      background-color: #94d3a2;
+      border-color: rgba(27, 31, 35, .1);
+      color: rgba(255, 255, 255, .8);
+      cursor: default;
+    }
+
+    button:active {
+      background-color: #298e46;
+      box-shadow: rgba(20, 70, 32, .2) 0 1px 0 inset;
+    }
+</style>
+<body onload="startGame()">
+
+<button id="startButton" role="button" onclick="setRunning(!running)"
+        style="font-size: 40px; position: fixed; right: 30%; top: 40%; bottom: 40%; left: 50%">
+    &gt;
+</button>
+
+<button id="nextButton" role="button" onclick="setNextPlayer()"
+        style="font-size: 40px; position: fixed; right: 50%; top: 40%; bottom: 40%; left: 30%">>>
+</button>
+
+</body>
+</html>
+
