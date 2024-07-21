@@ -51,7 +51,7 @@
 
     function initParams() {
         let params = new URLSearchParams(window.location.search);
-        playerNames = shuffle(params.getAll("player"));
+        playerNames = shuffle(params.getAll("player").filter((name) => name !== ""));
         console.log("players:" + playerNames);
 
         numOfSeconds = params.get("numOfSeconds");
