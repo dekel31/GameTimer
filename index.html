@@ -1,16 +1,67 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Player Names Form</title>
+	<style>
+		body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+        }
+        form {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        h2 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"], input[type="checkbox"] {
+            width: 95%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        input[type="submit"] {
+            background-color: #007bff;
+            color: #ffffff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+	</style>
+</head>
 <body>
-	<form method="get" action="/playGame.html">
-		<h2>Add Players</h2>
-		<label for="firstPlayer">1st Player:</label><br>
-		<input type="text" id="firstPlayer" value="Dekel"/>
-<label for="secondPlayer">2nd Player:</label><br>
-		<input type="text" id="secondPlayer" />
-<label for="thirdPlayer">3rd Player:</label><br>
-		<input type="text" id="thirdPlayer" />
-<label for="forthPlayer">4th Player:</label><br>
-		<input type="text" id="forthPlayer" />
-		<input type="submit" value="go"/>
-	</form>
+<form method="get" action="/playGame.html">
+	<h2>Add Players</h2>
+	<label for="firstPlayer">1st Player:</label>
+	<input type="text" id="firstPlayer" name="player" value="Dekel">
+	<label for="secondPlayer">2nd Player:</label>
+	<input type="text" id="secondPlayer" name="player" value="Michael">
+	<label for="thirdPlayer">3rd Player:</label>
+	<input type="text" id="thirdPlayer" name="player">
+	<label for="forthPlayer">4th Player:</label>
+	<input type="text" id="forthPlayer" name="player">
+
+	<label for="numOfSeconds">Bank of seconds:</label>
+	<input type="text" id="numOfSeconds" name="numOfSeconds" value="240">
+
+	<label for="timeToAdd">Time to add each turn:</label>
+	<input type="text" id="timeToAdd" name="timeToAdd" value="60">
+
+	<label for="landscape">Landscape mode:</label>
+	<input type="checkbox" id="landscape" name="landscape" value="true" checked>
+
+	<input type="submit" value="Go">
+</form>
 </body>
 </html>
