@@ -56,8 +56,12 @@
 
         numOfSeconds = params.get("numOfSeconds");
         console.log("numOfSeconds:" + numOfSeconds);
+
         timeToAdd = params.get("timeToAdd") ? parseInt(params.get("timeToAdd")) : 0;
         console.log("timeToAdd:" + timeToAdd);
+
+        capForTime = params.get("capForTime") ? parseInt(params.get("capForTime")) : 0;
+        console.log("capForTime:" + capForTime);
 
         landscape = params.get("landscape");
 
@@ -147,7 +151,8 @@
         document.getElementById("player" + currentPlayer).className = document.getElementById("player" + currentPlayer).className.replace("activePlayer", "");
         if (running && timeToAdd > 0) {
             let currentPlayerTime = parseInt(document.getElementById("player" + currentPlayer).innerText);
-            document.getElementById("player" + currentPlayer).innerText = currentPlayerTime + timeToAdd;
+
+            document.getElementById("player" + currentPlayer).innerText = Math.min(currentPlayerTime + timeToAdd, capForTime);
             console.log("player " + playerNames[currentPlayer] + " had " + currentPlayerTime +
                 " and gained " + timeToAdd + " seconds at " + humanReadableTime());
         }
