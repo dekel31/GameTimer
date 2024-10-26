@@ -1,0 +1,27 @@
+Timer app that can count each players turn time.
+
+Stories:
+1. initial layout: 4 numbers in white on black screen showing 240, evenly spaced from each other, landscape only.
+2. Start countdown timer for first player: "start" button on middle of screen - starts the first player timer, every second the top left number is decreased by one. Continue to minus.
+3. Turn order change: click on Start turns it to a next button.
+next stops timer for current player, starts the timer for the next (right top number).
+Each click will move to the next player - right top to left top, left top to left bottom, left bottom to right bottom, right bottom to right top (starts again).
+4. Pause game: on the right to the "start/next" button, a "pause" button to stop counting. the next button returns to start.
+start resumes the current player timer.
+5. Change player order: Clicking on a player timer starts it's timer instead of going to the next. Remove the Next button.
+
+
+additional - 
+Gain time - Each time player is changed, additional 90 seconds are added to the previous player.
+Config - add a start screen to configure:
+	what is a player's limit.
+	how much he gains.
+	players names.
+names for each timer.
+random turn order.
+
+statistics:
+Log each player turn with ability to export.
+log each pause and how much time passed.
+Log start of game time.
+log how much time each player took total.
