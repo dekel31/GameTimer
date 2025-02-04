@@ -147,8 +147,18 @@
         return date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
     }
 
-    function setNextPlayer() {
+    function setNextPlayer(addToBank) {
         document.getElementById("player" + currentPlayer).className = document.getElementById("player" + currentPlayer).className.replace("activePlayer", "");
+        if (addToBank) addTimeToCurrent();
+        currentPlayer++;
+        if (currentPlayer >= numOfPlayers) {
+            currentPlayer = 0;
+        }
+        document.getElementById("player" + currentPlayer).className = playerStyle + " activePlayer";
+        console.log("Next player turn at " + humanReadableTime() + ", current player " + playerNames[currentPlayer]);
+    }
+
+    function addTimeToCurrent() {
         if (running && timeToAdd > 0) {
             let currentPlayerTime = parseInt(document.getElementById("player" + currentPlayer).innerText);
 
@@ -156,14 +166,8 @@
             console.log("player " + playerNames[currentPlayer] + " had " + currentPlayerTime +
                 " and gained " + timeToAdd + " seconds at " + humanReadableTime());
         }
-        currentPlayer++;
-        if (currentPlayer >= numOfPlayers) {
-            currentPlayer = 0;
-        }
-        document.getElementById("player" + currentPlayer).className = playerStyle + " activePlayer";
-        console.log("Next player turn at " + humanReadableTime() + ", current player " + playerNames[currentPlayer])
     }
-
+    
     function checkIsRunning() {
         if (running) {
             document.getElementById("player" + currentPlayer).innerText -= 1;
@@ -245,12 +249,16 @@
 <body onload="startGame()">
 
 <button id="startButton" role="button" onclick="setRunning(!running)"
-        style="font-size: 40px; position: fixed; width: 220px; height: 220px; left: 25%; top: 35%">
+        style="font-size: 40px; position: fixed; width: 210px; height: 210px; left: 25%; top: 35%">
     &gt;
 </button>
 
 <button id="nextButton" role="button" onclick="setNextPlayer()"
-        style="font-size: 40px; position: fixed; width: 220px; height: 220px; right: 25%; top: 35%; background-color: #4287f5;">>>
+        style="font-size: 40px; position: fixed; width: 210px; height: 210px; right: 25%; top: 35%; background-color: #4287f5;">>>
+</button>
+
+<button id="nextWithoutBank" role="button" onclick="setNextPlayer(false)"
+        style="font-size: 40px; position: fixed; width: 210px; height: 210px; right: 25%; top: 65%; background-color: #444444;">>>
 </button>
 
 </body>
