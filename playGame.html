@@ -10,6 +10,7 @@
     let currentPlayer = 0;
     let numOfSeconds;
     let landscape;
+    let direction = 1;
 
     let playerNamesStyles;
     let playerStyle;
@@ -150,9 +151,12 @@
     function setNextPlayer(addToBank) {
         document.getElementById("player" + currentPlayer).className = document.getElementById("player" + currentPlayer).className.replace("activePlayer", "");
         if (addToBank) addTimeToCurrent();
-        currentPlayer++;
+        currentPlayer = currentPlayer + direction;
         if (currentPlayer >= numOfPlayers) {
             currentPlayer = 0;
+        }
+        if (currentPlayer == -1) {
+            currentPlayer = numOfPlayers - 1;
         }
         document.getElementById("player" + currentPlayer).className = playerStyle + " activePlayer";
         console.log("Next player turn at " + humanReadableTime() + ", current player " + playerNames[currentPlayer]);
@@ -173,6 +177,15 @@
             document.getElementById("player" + currentPlayer).innerText -= 1;
         }
     }
+
+    function rotate() {
+        if (direction == 1) {
+            direction = -1;
+        } else {
+            direction = 1;
+        }
+    }
+    
 </script>
 <style>
     body {
@@ -259,6 +272,10 @@
 
 <button id="nextWithoutBank" role="button" onclick="setNextPlayer(false)"
         style="font-size: 40px; position: fixed; width: 210px; height: 210px; right: 25%; top: 65%; background-color: #444444;">>>
+</button>
+
+<button id="rotate" role="button" onclick="rotate()"
+        style="font-size: 40px; position: fixed; width: 210px; height: 210px; left: 25%; top: 65%; background-color: #444444;">><
 </button>
 
 </body>
