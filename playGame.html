@@ -181,8 +181,10 @@
     function rotate() {
         if (direction == 1) {
             direction = -1;
+            document.getElementById("rotate").style.backgroundImage = "url('CounterClockwise.png')";
         } else {
             direction = 1;
+            document.getElementById("rotate").style.backgroundImage = "url('Clockwise.png')";
         }
     }
     
@@ -262,7 +264,7 @@
 <body onload="startGame()">
 
 <button id="startButton" role="button" onclick="setRunning(!running)"
-        style="font-size: 40px; position: fixed; width: 210px; height: 210px; left: 25%; top: 35%">
+        style="font-size: 80px; position: fixed; width: 210px; height: 210px; left: 25%; top: 35%; font-weight: bold">
     &gt;
 </button>
 
@@ -275,7 +277,7 @@
 </button>
 
 <button id="rotate" role="button" onclick="rotate()"
-        style="font-size: 40px; position: fixed; width: 210px; height: 210px; left: 25%; top: 65%; background-color: #444444;">><
+        style="font-size: 40px; position: fixed; width: 210px; height: 210px; left: 25%; top: 65%; background-image: url('Clockwise.png'); background-position: center; background-size: cover;">><
 </button>
 
 </body>
