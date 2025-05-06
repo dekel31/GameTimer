@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Common BGG Games</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    textarea { width: 300px; height: 100px; }
+    button { margin-top: 10px; }
+    ul { margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Find Common BGG Games</h1>
+  <p>Enter BGG usernames (one per line):</p>
+  <textarea id="usernames"></textarea><br>
+  <button onclick="generate()">Generate</button>
+
+  <h2>Common Games</h2>
+  <ul id="result"></ul>
+
+  <script>
+    async function fetchGames(username) {
+      const url = `https://q72tf4h7ozml5tizr5qd4oxs2y0jzkde.lambda-url.eu-north-1.on.aws/?username=${encodeURIComponent(username)}`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`Error fetching for ${username}`);
+      return await response.json(); // assumed to be an array of game names
+    }
+
+    async function generate() {
+      const output = document.getElementById('result');
+      output.innerHTML = '<li>Loading...</li>';
+
+      const usernames = document.getElementById('usernames')
+        .value.split('\n')
+        .map(u => u.trim())
+        .filter(u => u);
+
+      if (usernames.length === 0) {
+        output.innerHTML = '<li>Please enter at least one username.</li>';
+        return;
+      }
+
+      try {
+        const allResults = await Promise.all(usernames.map(fetchGames));
+
+        // Get intersection of all result arrays
+        const common = allResults.reduce((a, b) => a.filter(game => b.includes(game)));
+
+        // Render result
+        output.innerHTML = '';
+        if (common.length === 0) {
+          output.innerHTML = '<li>No common games found.</li>';
+        } else {
+          common.forEach(game => {
+            const li = document.createElement('li');
+            li.textContent = game;
+            output.appendChild(li);
+          });
+        }
+      } catch (err) {
+        output.innerHTML = `<li>Error: ${err.message}</li>`;
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>
