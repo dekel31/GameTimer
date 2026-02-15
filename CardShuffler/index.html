@@ -3,18 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Persistent Deck Manager</title>
+    <title>Deck Manager with Named Saves</title>
     <style>
-        body { font-family: 'Segoe UI', system-ui, sans-serif; max-width: 650px; margin: 20px auto; padding: 20px; background-color: #f0f2f5; color: #333; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; background-color: #f0f2f5; color: #333; }
         .card-panel { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
-        input { padding: 10px; border: 1px solid #ddd; border-radius: 6px; flex: 1; }
+        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
+        .flex-grow { flex: 1; }
         button { padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: opacity 0.2s; }
         button:hover { opacity: 0.9; }
         .btn-add { background: #007bff; color: white; }
         .btn-draw { background: #28a745; color: white; width: 100%; font-size: 1.2rem; margin-bottom: 10px; }
         .btn-shuffle { background: #6f42c1; color: white; flex: 1; }
         .btn-clear { background: #dc3545; color: white; flex: 1; }
+        .btn-save { background: #17a2b8; color: white; }
         button:disabled { background: #ccc; cursor: not-allowed; }
         .display-area { text-align: center; padding: 30px; border: 3px solid #e9ecef; border-radius: 12px; margin-bottom: 20px; background: #fff; }
         #drawnCard { font-size: 2.5rem; color: #333; margin: 10px 0; min-height: 60px; }
@@ -22,23 +24,42 @@
         h3 { font-size: 0.8rem; text-transform: uppercase; color: #666; letter-spacing: 1px; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 0; }
         .list-container { background: #f8f9fa; padding: 15px; border-radius: 8px; font-size: 0.9rem; border: 1px solid #e9ecef; }
         .history-list { grid-column: span 2; max-height: 200px; overflow-y: auto; }
+        .save-manager { margin-top: 20px; padding-top: 20px; border-top: 2px solid #eee; }
     </style>
 </head>
 <body>
 
 <div class="card-panel">
+    <!-- Input Section -->
     <div class="input-group">
-        <input type="text" id="cardName" placeholder="Card Name">
+        <input type="text" id="cardName" class="flex-grow" placeholder="Card Name">
         <input type="number" id="cardQty" placeholder="Qty" min="1" style="width: 80px;">
-        <button class="btn-add" onclick="addCards()">Add</button>
+        <button class="btn-add" onclick="addCards()">Add to Deck</button>
     </div>
 
+    <!-- Drawing Section -->
     <div class="display-area">
         <div id="drawnCard">---</div>
         <button id="drawBtn" class="btn-draw" onclick="drawCard()" disabled>DRAW CARD</button>
         <div style="display: flex; gap: 10px;">
-            <button id="shuffleBtn" class="btn-shuffle" onclick="shuffleInitial()" disabled>SHUFFLE (Reset Deck)</button>
+            <button id="shuffleBtn" class="btn-shuffle" onclick="shuffleInitial()" disabled>SHUFFLE (Reset Current)</button>
             <button class="btn-clear" onclick="fullReset()">CLEAR ALL</button>
+        </div>
+    </div>
+
+    <!-- Save Manager -->
+    <div class="save-manager">
+        <h3>Saved Decks</h3>
+        <div class="input-group">
+            <input type="text" id="saveName" class="flex-grow" placeholder="Enter deck name to save...">
+            <button class="btn-save" onclick="saveNamedDeck()">Save Deck</button>
+        </div>
+        <div class="input-group">
+            <select id="savedDecksList" class="flex-grow">
+                <option value="">-- Select a saved deck --</option>
+            </select>
+            <button onclick="loadNamedDeck()">Load</button>
+            <button class="btn-clear" onclick="deleteNamedDeck()">Delete</button>
         </div>
     </div>
 
@@ -52,7 +73,7 @@
             <div id="initialDeckView">No configuration.</div>
         </div>
         <div class="list-container history-list">
-            <h3>Discard Pile (Order: Newest First)</h3>
+            <h3>Discard Pile (Newest First)</h3>
             <div id="discardHistory"></div>
         </div>
     </div>
@@ -65,77 +86,109 @@
         discardPile: [],
         lastDrawn: "---"
     };
+    let savedDecks = {};
 
-    // Load data on startup
     window.onload = () => {
-        const savedState = localStorage.getItem('deckAppState');
-        if (savedState) {
-            state = JSON.parse(savedState);
+        const lastSession = localStorage.getItem('deckAppState');
+        if (lastSession) {
+            state = JSON.parse(lastSession);
             document.getElementById('drawnCard').innerText = state.lastDrawn;
         }
+
+        const library = localStorage.getItem('deckLibrary');
+        if (library) savedDecks = JSON.parse(library);
+
         updateUI();
+        populateSavedList();
     };
 
-    function saveState() {
-        localStorage.setItem('deckAppState', JSON.stringify(state));
-    }
-
     function addCards() {
-        const nameInput = document.getElementById('cardName');
-        const qtyInput = document.getElementById('cardQty');
-        const name = nameInput.value.trim();
-        const qty = parseInt(qtyInput.value);
-
+        const name = document.getElementById('cardName').value.trim();
+        const qty = parseInt(document.getElementById('cardQty').value);
         if (name && qty > 0) {
             state.currentDeck.push({ name, qty });
             state.initialDeck.push({ name, qty });
-            nameInput.value = '';
-            qtyInput.value = '';
+            document.getElementById('cardName').value = '';
+            document.getElementById('cardQty').value = '';
             updateUI();
         }
     }
 
     function drawCard() {
         let pool = [];
-        state.currentDeck.forEach((card, index) => {
-            for (let i = 0; i < card.qty; i++) pool.push(index);
+        state.currentDeck.forEach((card, idx) => {
+            for (let i = 0; i < card.qty; i++) pool.push(idx);
         });
-
         if (pool.length === 0) return;
 
-        const randomIndex = pool[Math.floor(Math.random() * pool.length)];
-        const selected = state.currentDeck[randomIndex];
+        const selectedIdx = pool[Math.floor(Math.random() * pool.length)];
+        const card = state.currentDeck[selectedIdx];
 
-        state.lastDrawn = selected.name;
+        state.lastDrawn = card.name;
         document.getElementById('drawnCard').innerText = state.lastDrawn;
-        state.discardPile.unshift(selected.name);
-        selected.qty--;
+        state.discardPile.unshift(card.name);
+        card.qty--;
 
-        if (selected.qty <= 0) state.currentDeck.splice(randomIndex, 1);
-
+        if (card.qty <= 0) state.currentDeck.splice(selectedIdx, 1);
         updateUI();
     }
 
     function shuffleInitial() {
-        state.currentDeck = state.initialDeck.map(card => ({ ...card }));
+        state.currentDeck = state.initialDeck.map(c => ({ ...c }));
         state.discardPile = [];
         state.lastDrawn = "Deck Shuffled!";
         document.getElementById('drawnCard').innerText = state.lastDrawn;
         updateUI();
     }
 
+    function saveNamedDeck() {
+        const name = document.getElementById('saveName').value.trim();
+        if (!name) return alert("Please enter a name for the deck.");
+
+        savedDecks[name] = JSON.parse(JSON.stringify(state)); // Deep copy current state
+        localStorage.setItem('deckLibrary', JSON.stringify(savedDecks));
+        document.getElementById('saveName').value = '';
+        populateSavedList();
+        alert(`Deck "${name}" saved!`);
+    }
+
+    function loadNamedDeck() {
+        const name = document.getElementById('savedDecksList').value;
+        if (!name) return;
+        state = JSON.parse(JSON.stringify(savedDecks[name]));
+        document.getElementById('drawnCard').innerText = state.lastDrawn;
+        updateUI();
+    }
+
+    function deleteNamedDeck() {
+        const name = document.getElementById('savedDecksList').value;
+        if (name && confirm(`Delete "${name}"?`)) {
+            delete savedDecks[name];
+            localStorage.setItem('deckLibrary', JSON.stringify(savedDecks));
+            populateSavedList();
+        }
+    }
+
     function fullReset() {
-        if(confirm("Are you sure? This wipes all saved cards.")) {
+        if(confirm("Wipe current deck? (Saved decks will remain)")) {
             state = { currentDeck: [], initialDeck: [], discardPile: [], lastDrawn: "---" };
-            document.getElementById('drawnCard').innerText = state.lastDrawn;
+            document.getElementById('drawnCard').innerText = "---";
             updateUI();
         }
     }
 
-    function updateUI() {
-        const drawBtn = document.getElementById('drawBtn');
-        const shuffleBtn = document.getElementById('shuffleBtn');
+    function populateSavedList() {
+        const list = document.getElementById('savedDecksList');
+        list.innerHTML = '<option value="">-- Select a saved deck --</option>';
+        Object.keys(savedDecks).sort().forEach(name => {
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = name;
+            list.appendChild(opt);
+        });
+    }
 
+    function updateUI() {
         let total = 0;
         document.getElementById('currentDeckView').innerHTML = state.currentDeck.map(c => {
             total += c.qty;
@@ -143,19 +196,12 @@
         }).join('') || "Empty";
 
         document.getElementById('countRem').innerText = total;
+        document.getElementById('initialDeckView').innerHTML = state.initialDeck.map(c => `<div>${c.qty}x ${c.name}</div>`).join('') || "None";
+        document.getElementById('discardHistory').innerHTML = state.discardPile.map((n, i) => `<div>${state.discardPile.length - i}. ${n}</div>`).join('');
 
-        document.getElementById('initialDeckView').innerHTML = state.initialDeck.map(c =>
-            `<div>${c.qty}x ${c.name}</div>`
-        ).join('') || "No configuration.";
-
-        document.getElementById('discardHistory').innerHTML = state.discardPile
-            .map((name, i) => `<div>${state.discardPile.length - i}. ${name}</div>`)
-            .join('');
-
-        drawBtn.disabled = (total === 0);
-        shuffleBtn.disabled = (state.initialDeck.length === 0);
-
-        saveState(); // Update browser storage whenever UI changes
+        document.getElementById('drawBtn').disabled = (total === 0);
+        document.getElementById('shuffleBtn').disabled = (state.initialDeck.length === 0);
+        localStorage.setItem('deckAppState', JSON.stringify(state));
     }
 </script>
 </body>
